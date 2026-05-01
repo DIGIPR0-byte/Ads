@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AdStudio – AI Ad Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--surface:rgba(255,255,255,.04);--border:rgba(255,255,255,.09);
+  --text:#f0f0f0;--muted:#888;--dim:#555;
+  --accent:#f97316;--accent2:#ec4899;
+  --green:#10b981;--red:#ef4444;--blue:#818cf8;
+  --grad:linear-gradient(135deg,#f97316,#ec4899);
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#111}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+
+/* ── layout ── */
+#app{max-width:680px;margin:0 auto;padding:0 18px 100px}
+.header{display:flex;justify-content:space-between;align-items:center;padding:22px 0 0}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;letter-spacing:-.5px}
+.logo span{color:var(--accent)}
+.logo-sub{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.steps{display:flex;gap:5px;align-items:center}
+.step-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.15);transition:all .3s;cursor:default}
+.step-dot.active{background:var(--accent);transform:scale(1.4)}
+.step-dot.done{background:var(--green);cursor:pointer}
+.step-line{width:16px;height:1px;background:rgba(255,255,255,.1);transition:background .3s}
+.step-line.done{background:var(--green)}
+.step-label{font-size:11px;color:var(--dim);font-family:'Syne',sans-serif;margin-left:8px}
+.section{margin-top:28px}
+
+/* ── typography ── */
+.page-title{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;line-height:1.2}
+.page-title span{color:var(--accent)}
+.page-sub{color:var(--dim);font-size:13px;margin-top:8px}
+.label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+
+/* ── inputs ── */
+input,textarea,select{
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  color:var(--text);padding:12px 16px;border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-size:14px;width:100%;outline:none;
+  transition:border .2s;
+}
+input:focus,textarea:focus{border-color:var(--accent);background:rgba(249,115,22,.05)}
+input::placeholder,textarea::placeholder{color:var(--dim)}
+textarea{resize:none}
+.row{display:flex;gap:12px}
+.row>div{flex:1}
+
+/* ── buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;letter-spacing:.4px;padding:13px 24px}
+.btn-primary{background:var(--grad);color:#fff}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(249,115,22,.4)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.btn-ghost{background:rgba(255,255,255,.06);border:1px solid var(--border);color:#ccc;font-size:13px;padding:10px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;font-weight:500}
+.btn-ghost:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);color:#fff}
+.btn-sm{padding:7px 14px;font-size:12px;border-radius:8px}
+.btn-full{width:100%;padding:15px}
+.btn-post{background:var(--grad);color:#fff;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;padding:9px 16px;transition:all .2s;white-space:nowrap}
+.btn-post:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(249,115,22,.4)}
+.btn-post:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* ── chips ── */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.chip{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .2s;user-select:none;white-space:nowrap}
+.chip:hover{border-color:rgba(255,255,255,.3)}
+.chip.active{background:rgba(249,115,22,.15);border-color:var(--accent);color:var(--accent)}
+
+/* ── cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px}
+.ad-card{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:all .2s;margin-bottom:12px}
+.ad-card:hover{border-color:rgba(255,255,255,.22)}
+.ad-card.active{border-color:var(--accent);background:rgba(249,115,22,.07)}
+
+/* ── platform cards ── */
+.platform-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px;transition:border .2s}
+.platform-card.connected{border-color:rgba(16,185,129,.3)}
+.p-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.p-icon-wrap{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900}
+.p-info{flex:1;margin-left:10px}
+.p-name{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
+.p-status{font-size:11px;color:var(--dim);margin-top:2px}
+.post-body{background:rgba(0,0,0,.3);border-radius:10px;padding:14px;font-size:13px;color:#ccc;line-height:1.7;white-space:pre-wrap;margin-bottom:12px;border-left:3px solid transparent}
+.p-actions{display:flex;gap:8px}
+.err-box{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:#fca5a5;margin-bottom:10px;line-height:1.6}
+
+/* ── visual preview ── */
+.preview-wrap{border-radius:18px;overflow:hidden;position:relative;aspect-ratio:1;display:flex;flex-direction:column;justify-content:flex-end;padding:24px;color:#fff;margin-bottom:10px}
+.preview-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.85) 0%,rgba(0,0,0,.2) 60%,transparent 100%)}
+.preview-content{position:relative;z-index:1}
+.preview-price{position:absolute;top:24px;right:24px;background:rgba(255,255,255,.15);backdrop-filter:blur(10px);padding:8px 14px;border-radius:10px;font-size:14px;font-weight:700;z-index:1}
+.gradient-swatches{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.swatch{width:32px;height:32px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.swatch.active{border-color:#fff}
+
+/* ── badges ── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-orange{background:rgba(249,115,22,.15);color:var(--accent)}
+.badge-green{background:rgba(16,185,129,.15);color:var(--green)}
+.badge-red{background:rgba(239,68,68,.15);color:var(--red)}
+.badge-blue{background:rgba(129,140,248,.15);color:var(--blue)}
+.badge-yellow{background:rgba(251,191,36,.15);color:#fbbf24}
+
+/* ── modal ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.open{display:flex}
+.modal{background:#141418;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:28px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;margin-bottom:4px}
+.modal-note{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:18px}
+.modal-note a{color:var(--accent);text-decoration:none}
+.key-note{margin-top:14px;padding:12px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.15);border-radius:10px;font-size:11px;color:#6ee7b7;line-height:1.7}
+
+/* ── post-all banner ── */
+.post-all{background:linear-gradient(135deg,rgba(249,115,22,.12),rgba(236,72,153,.12));border:1px solid rgba(249,115,22,.25);border-radius:14px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.post-all-title{font-family:'Syne',sans-serif;font-weight:800;font-size:15px}
+.post-all-sub{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* ── summary box ── */
+.summary{background:linear-gradient(135deg,rgba(249,115,22,.08),rgba(236,72,153,.08));border:1px solid rgba(249,115,22,.18);border-radius:14px;padding:20px;margin-top:16px}
+.summary-title{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;margin-bottom:10px}
+.summary-row{font-size:13px;color:#aaa;margin-bottom:5px}
+.summary-row span{color:#ddd}
+.summary-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+/* ── animations ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.fade-in{animation:fadeIn .35s ease both}
+.pulse{animation:pulse 1.8s ease-in-out infinite}
+.loading-box{text-align:center;padding:50px 20px}
+.loading-icon{font-size:34px;margin-bottom:10px}
+.loading-text{color:var(--dim);font-size:13px}
+
+/* ── misc ── */
+.prompt-box{background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+.prompt-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.prompt-text{font-size:12px;color:#ccc;line-height:1.6;font-family:monospace}
+.char-count{font-size:11px;color:var(--dim)}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.gap-8{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="logo">AD<span>STUDIO</span></div>
+      <div class="logo-sub">AI-Powered Ad Engine</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px" id="stepNav">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- STEPS -->
+  <div id="step0" class="section"></div>
+  <div id="step1" class="section" style="display:none"></div>
+  <div id="step2" class="section" style="display:none"></div>
+  <div id="step3" class="section" style="display:none"></div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="credModal">
+  <div class="modal" id="credModalInner"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+const S = {
+  step: 0,
+  product: { name:'', desc:'', price:'', audience:'' },
+  format: 'launch',
+  tone: 'Bold & Direct',
+  generatedAds: null,
+  selectedAd: 0,
+  imagePrompt: '',
+  imageIdeas: null,
+  selectedGrad: 0,
+  selectedPlatforms: ['twitter','linkedin'],
+  platformPosts: null,
+  credentials: {},
+  postStatus: {},
+  postError: {},
+  copied: null,
+};
+
+// ═══════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════
+const PLATFORMS = [
+  { id:'twitter',   label:'X / Twitter', icon:'𝕏',  color:'#1d9bf0', charLimit:280,
+    apiMode:'api', setupUrl:'https://developer.twitter.com/en/portal/dashboard',
+    fields:[{key:'apiKey',label:'API Key'},{key:'apiSecret',label:'API Secret'},{key:'accessToken',label:'Access Token'},{key:'accessTokenSecret',label:'Access Token Secret'}],
+    note:'Free-tier developer app — enable Read+Write permissions.' },
+  { id:'linkedin',  label:'LinkedIn',    icon:'in', color:'#0077b5', charLimit:3000,
+    apiMode:'api', setupUrl:'https://www.linkedin.com/developers/apps',
+    fields:[{key:'accessToken',label:'OAuth 2.0 Access Token'},{key:'personUrn',label:'Person URN (urn:li:person:XXXX)'}],
+    note:'Create a LinkedIn App → request r_liteprofile + w_member_social.' },
+  { id:'facebook',  label:'Facebook',    icon:'f',  color:'#1877f2', charLimit:63206,
+    apiMode:'api', setupUrl:'https://developers.facebook.com/apps',
+    fields:[{key:'accessToken',label:'Page Access Token'},{key:'pageId',label:'Page ID'}],
+    note:'Graph API Explorer → generate long-lived Page Access Token.' },
+  { id:'instagram', label:'Instagram',   icon:'◈',  color:'#e1306c', charLimit:2200,
+    apiMode:'clipboard', setupUrl:'https://www.instagram.com', fields:[],
+    note:'Instagram blocks browser OAuth. We copy the post and open the app.' },
+  { id:'tiktok',    label:'TikTok',      icon:'♪',  color:'#ff0050', charLimit:2200,
+    apiMode:'clipboard', setupUrl:'https://www.tiktok.com', fields:[],
+    note:'TikTok posting requires a server. We copy the post and open the app.' },
+];
+
+const AD_FORMATS = [
+  {id:'launch',label:'🚀 Product Launch'},{id:'promo',label:'🔥 Limited Offer'},
+  {id:'testimonial',label:'⭐ Social Proof'},{id:'problem',label:'💡 Problem/Solution'},
+  {id:'curiosity',label:'🪝 Curiosity Hook'},
+];
+const TONES = ['Bold & Direct','Conversational','Luxury/Premium','Urgent','Educational'];
+const GRADIENTS = [
+  'linear-gradient(135deg,#f97316,#ec4899)',
+  'linear-gradient(135deg,#6366f1,#06b6d4)',
+  'linear-gradient(135deg,#10b981,#3b82f6)',
+  'linear-gradient(135deg,#f59e0b,#ef4444)',
+  'linear-gradient(135deg,#8b5cf6,#ec4899)',
+  'linear-gradient(135deg,#14b8a6,#6366f1)',
+];
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+function h(tag, attrs={}, ...children) {
+  const el = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)) {
+    if (k==='class') el.className=v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+    else el.setAttribute(k, v);
+  }
+  for (const c of children.flat()) {
+    if (c==null) continue;
+    el.appendChild(typeof c==='string' ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+
+function copyText(text, id) {
+  navigator.clipboard.writeText(text);
+  S.copied = id;
+  renderAll();
+  setTimeout(()=>{ S.copied=null; renderAll(); }, 2000);
+}
+
+function hasCreds(id) {
+  const p = PLATFORMS.find(x=>x.id===id);
+  if (!p || p.apiMode==='clipboard') return true;
+  const c = S.credentials[id]||{};
+  return p.fields.every(f=>c[f.key]?.trim());
+}
+
+function setStep(n) {
+  S.step = n;
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+//  API CALLS
+// ═══════════════════════════════════════════════════════
+async function claudeJSON(system, user, maxTokens=1200) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      system,
+      messages:[{role:'user',content:user}],
+    }),
+  });
+  const data = await res.json();
+  const text = data.content?.find(b=>b.type==='text')?.text||'';
+  return JSON.parse(text.replace(/```json|```/g,'').trim());
+}
+
+async function generateAds() {
+  const {name,desc,price,audience} = S.product;
+  const parsed = await claudeJSON(
+    'You are a world-class digital product copywriter. Return ONLY valid JSON, no markdown.',
+    `Create 3 ad variations.
+Product: ${name}
+Description: ${desc}
+Price: ${price||'not specified'}
+Audience: ${audience||'general'}
+Format: ${S.format}
+Tone: ${S.tone}
+Return JSON: {"ads":[{"headline":"under 10 words","subheadline":"under 15 words","body":"2-3 sentences","cta":"3-5 word CTA","hashtags":["t1","t2","t3","t4","t5"]}]}`
+  );
+  S.generatedAds = parsed.ads;
+  S.selectedAd = 0;
+  S.imagePrompt = `${name} – ${S.format} style digital product ad, ${S.tone.toLowerCase()} aesthetic`;
+}
+
+async function generateImageIdeas() {
+  const ad = S.generatedAds?.[S.selectedAd];
+  const parsed = await claudeJSON(
+    'You are a visual creative director. Return ONLY valid JSON, no markdown.',
+    `Generate 4 visual/image concepts.
+Product: ${S.product.name}
+Headline: ${ad?.headline||''}
+Tone: ${S.tone}
+Hint: ${S.imagePrompt}
+Return JSON: {"concepts":[{"title":"name","description":"2-sentence visual","midjourney_prompt":"detailed prompt for Midjourney/DALL-E","style":"photography|illustration|3D|minimal","mood":"one word"}]}`,
+    900
+  );
+  S.imageIdeas = parsed.concepts;
+}
+
+async function generatePlatformPosts() {
+  const ad = S.generatedAds?.[S.selectedAd];
+  if (!ad) return;
+  const parsed = await claudeJSON(
+    'You are a social media expert. Return ONLY valid JSON, no markdown.',
+    `Write platform-native ad posts.
+Product: ${S.product.name}
+Headline: ${ad.headline}
+Body: ${ad.body}
+CTA: ${ad.cta}
+Hashtags: ${ad.hashtags?.join(' ')}
+Platforms: ${S.selectedPlatforms.join(', ')}
+X/Twitter ≤280 chars. Instagram: line breaks+hashtags. LinkedIn: professional. Facebook: casual. TikTok: trend-aware.
+Return JSON: {"posts":{"twitter":"","instagram":"","facebook":"","linkedin":"","tiktok":""}}`,
+    1600
+  );
+  S.platformPosts = parsed.posts;
+}
+
+// ═══════════════════════════════════════════════════════
+//  POSTING
+// ═══════════════════════════════════════════════════════
+async function autoPost(platformId) {
+  const p = PLATFORMS.find(x=>x.id===platformId);
+  const text = S.platformPosts?.[platformId];
+  if (!text) return;
+
+  if (p.apiMode==='clipboard') {
+    navigator.clipboard.writeText(text);
+    S.postStatus[platformId]='clipboard';
+    renderAll();
+    window.open({instagram:'https://www.instagram.com/',tiktok:'https://www.tiktok.com/'}[platformId],'_blank');
+    return;
+  }
+
+  if (!hasCreds(platformId)) { openCredModal(platformId); return; }
+
+  S.postStatus[platformId]='posting';
+  S.postError[platformId]='';
+  renderAll();
+
+  try {
+    const creds = S.credentials[platformId]||{};
+    if (platformId==='twitter') {
+      const r = await fetch('https://api.twitter.com/2/tweets',{
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':`OAuth oauth_consumer_key="${creds.apiKey}", oauth_token="${creds.accessToken}"`},
+        body:JSON.stringify({text:text.slice(0,280)}),
+      });
+      if (!r.ok) throw new Error(`Twitter ${r.status} — CORS note: Twitter requires server-side OAuth signing in production.`);
+    }
+    if (platformId==='linkedin') {
+      const r = await fetch('https://api.linkedin.com/v2/ugcPosts',{
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${creds.accessToken}`,'X-Restli-Protocol-Version':'2.0.0'},
+        body:JSON.stringify({author:creds.personUrn,lifecycleState:'PUBLISHED',specificContent:{'com.linkedin.ugc.ShareContent':{shareCommentary:{text},shareMediaCategory:'NONE'}},visibility:{'com.linkedin.ugc.MemberNetworkVisibility':'PUBLIC'}}),
+      });
+      if (!r.ok) throw new Error(`LinkedIn ${r.status} — CORS note: LinkedIn blocks browser calls; use a CORS proxy or backend.`);
+    }
+    if (platformId==='facebook') {
+      const r = await fetch(`https://graph.facebook.com/v19.0/${creds.pageId}/feed`,{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message:text,access_token:creds.accessToken}),
+      });
+      if (!r.ok) throw new Error(`Facebook ${r.status}`);
+    }
+    S.postStatus[platformId]='ok';
+  } catch(err) {
+    S.postStatus[platformId]='error';
+    S.postError[platformId]=err.message;
+  }
+  renderAll();
+}
+
+function autoPostAll() {
+  S.selectedPlatforms.filter(id=>S.platformPosts?.[id]).forEach(id=>autoPost(id));
+}
+
+// ═══════════════════════════════════════════════════════
+//  CREDENTIAL MODAL
+// ═══════════════════════════════════════════════════════
+let credDraft = {};
+function openCredModal(pid) {
+  const p = PLATFORMS.find(x=>x.id===pid);
+  credDraft = {...(S.credentials[pid]||{})};
+  const inner = document.getElementById('credModalInner');
+  inner.innerHTML = '';
+
+  const header = h('div',{style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:18px'},
+    h('div',{class:'modal-title'},
+      h('span',{style:`color:${p.color}`},p.icon), ` ${p.label} Setup`
+    ),
+    h('button',{class:'btn-ghost btn-sm',onClick:()=>closeCredModal()},'✕')
+  );
+
+  const note = h('div',{class:'modal-note'},
+    p.note, ' ',
+    h('a',{href:p.setupUrl,target:'_blank',rel:'noreferrer'},'Get keys →')
+  );
+
+  inner.appendChild(header);
+  inner.appendChild(note);
+
+  if (p.apiMode==='clipboard') {
+    inner.appendChild(h('div',{style:'color:#888;font-size:13px;line-height:1.8'},
+      h('p',{},'When you click Post, AdStudio will:'),
+      h('ol',{style:'padding-left:20px;margin-top:8px;display:flex;flex-direction:column;gap:4px'},
+        h('li',{},'Copy your post text to clipboard'),
+        h('li',{},`Open ${p.label} in a new tab`),
+        h('li',{},'Paste and publish manually'),
+      )
+    ));
+  } else {
+    const fields = p.fields.map(f=>{
+      const wrap = h('div',{style:'margin-bottom:14px'});
+      wrap.appendChild(h('div',{class:'label',style:'margin-bottom:6px'},f.label));
+      const inp = h('input',{type:'password',placeholder:`Enter ${f.label}`});
+      inp.value = credDraft[f.key]||'';
+      inp.addEventListener('input',e=>{ credDraft[f.key]=e.target.value; });
+      wrap.appendChild(inp);
+      return wrap;
+    });
+    fields.forEach(f=>inner.appendChild(f));
+
+    const btns = h('div',{style:'display:flex;gap:10px;margin-top:20px'},
+      h('button',{class:'btn btn-ghost',style:'flex:1',onClick:()=>closeCredModal()},'Cancel'),
+      h('button',{class:'btn btn-primary',style:'flex:1',onClick:()=>{
+        S.credentials[pid]={...credDraft};
+        closeCredModal();
+        renderAll();
+      }},'Save & Connect')
+    );
+    inner.appendChild(btns);
+    inner.appendChild(h('div',{class:'key-note'},'🔒 Keys are stored only in your browser session — never sent to any server except the platform\'s own API.'));
+  }
+
+  document.getElementById('credModal').classList.add('open');
+}
+
+function closeCredModal() {
+  document.getElementById('credModal').classList.remove('open');
+}
+
+document.getElementById('credModal').addEventListener('click', e=>{
+  if (e.target===document.getElementById('credModal')) closeCredModal();
+});
+
+// ═══════════════════════════════════════════════════════
+//  STEP NAV
+// ═══════════════════════════════════════════════════════
+const STEP_LABELS = ['Product','Copy','Visuals','Distribute'];
+function renderStepNav() {
+  const nav = document.getElementById('stepNav');
+  nav.innerHTML='';
+  STEP_LABELS.forEach((label,i)=>{
+    const dot = h('div',{class:`step-dot${i===S.step?' active':i<S.step?' done':''}`});
+    if (i<S.step) dot.addEventListener('click',()=>setStep(i));
+    nav.appendChild(dot);
+    if (i<STEP_LABELS.length-1) {
+      const line = h('div',{class:`step-line${i<S.step?' done':''}`});
+      nav.appendChild(line);
+    }
+  });
+  nav.appendChild(h('div',{class:'step-label'},STEP_LABELS[S.step]));
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER STEPS
+// ═══════════════════════════════════════════════════════
+
+function renderStep0() {
+  const el = document.getElementById('step0');
+  el.innerHTML='';
+  el.className='section fade-in';
+
+  el.appendChild(h('div',{},
+    h('div',{class:'page-title'},'Tell us about ',h('span',{},'your product')),
+    h('div',{class:'page-sub'},'The more detail, the sharper the ads.')
+  ));
+
+  const form = h('div',{style:'display:flex;flex-direction:column;gap:14px;margin-top:22px'});
+
+  // name
+  const nameWrap = h('div',{});
+  nameWrap.appendChild(h('div',{class:'label'},'Product Name *'));
+  const nameInp = h('input',{type:'text',placeholder:'e.g. LinkedIn Bio Masterclass'});
+  nameInp.value = S.product.name;
+  nameInp.addEventListener('input',e=>S.product.name=e.target.value);
+  nameWrap.appendChild(nameInp);
+  form.appendChild(nameWrap);
+
+  // desc
+  const descWrap = h('div',{});
+  descWrap.appendChild(h('div',{class:'label'},'Description *'));
+  const descInp = h('textarea',{rows:'3',placeholder:'What does it do? What problem does it solve?'});
+  descInp.value = S.product.desc;
+  descInp.addEventListener('input',e=>S.product.desc=e.target.value);
+  descWrap.appendChild(descInp);
+  form.appendChild(descWrap);
+
+  // price + audience
+  const row = h('div',{class:'row'});
+  const pw=h('div',{}); pw.appendChild(h('div',{class:'label'},'Price'));
+  const pi=h('input',{type:'text',placeholder:'$27 or Free'}); pi.value=S.product.price; pi.addEventListener('input',e=>S.product.price=e.target.value);
+  pw.appendChild(pi); row.appendChild(pw);
+  const aw=h('div',{}); aw.appendChild(h('div',{class:'label'},'Target Audience'));
+  const ai=h('input',{type:'text',placeholder:'Freelancers, SaaS founders'}); ai.value=S.product.audience; ai.addEventListener('input',e=>S.product.audience=e.target.value);
+  aw.appendChild(ai); row.appendChild(aw);
+  form.appendChild(row);
+
+  // format
+  const fmtWrap = h('div',{});
+  fmtWrap.appendChild(h('div',{class:'label',style:'margin-bottom:10px'},'Ad Format'));
+  const fmtChips = h('div',{class:'chips'});
+  AD_FORMATS.forEach(f=>{
+    const chip = h('div',{class:`chip${S.format===f.id?' active':''}`},f.label);
+    chip.addEventListener('click',()=>{ S.format=f.id; renderStep0(); });
+    fmtChips.appendChild(chip);
+  });
+  fmtWrap.appendChild(fmtChips);
+  form.appendChild(fmtWrap);
+
+  // tone
+  const toneWrap = h('div',{});
+  toneWrap.appendChild(h('div',{class:'label',style:'margin-bottom:10px'},'Tone'));
+  const toneChips = h('div',{class:'chips'});
+  TONES.forEach(t=>{
+    const chip = h('div',{class:`chip${S.tone===t?' active':''}`},t);
+    chip.addEventListener('click',()=>{ S.tone=t; renderStep0(); });
+    toneChips.appendChild(chip);
+  });
+  toneWrap.appendChild(toneChips);
+  form.appendChild(toneWrap);
+
+  el.appendChild(form);
+
+  const genBtn = h('button',{class:'btn btn-primary btn-full',style:'margin-top:26px'},
+    S._genLoading ? '⚡ Generating…' : 'Generate Ad Copy →'
+  );
+  if (S._genLoading) genBtn.setAttribute('disabled','');
+  genBtn.addEventListener('click', async()=>{
+    if (!S.product.name||!S.product.desc) return;
+    S._genLoading=true; renderStep0();
+    try { await generateAds(); setStep(1); } catch(e){ console.error(e); }
+    S._genLoading=false; renderStep0();
+  });
+  el.appendChild(genBtn);
+}
+
+function renderStep1() {
+  const el = document.getElementById('step1');
+  el.innerHTML='';
+  el.className='section fade-in';
+  if (!S.generatedAds) return;
+
+  el.appendChild(h('div',{},
+    h('div',{class:'page-title'},'Pick your ',h('span',{},'ad copy')),
+    h('div',{class:'page-sub'},'3 variations. Select one to continue.')
+  ));
+
+  const cards = h('div',{style:'margin-top:20px'});
+  S.generatedAds.forEach((a,i)=>{
+    const card = h('div',{class:`ad-card${S.selectedAd===i?' active':''}`});
+    card.addEventListener('click',()=>{ S.selectedAd=i; renderStep1(); });
+
+    const top = h('div',{class:'flex-between',style:'margin-bottom:10px'});
+    top.appendChild(h('div',{style:`font-size:11px;color:${S.selectedAd===i?'var(--accent)':'var(--dim)'};text-transform:uppercase;letter-spacing:1px;font-weight:600`},`Variant ${i+1}`));
+    if (S.selectedAd===i) top.appendChild(h('div',{class:'badge badge-orange'},'Selected'));
+    card.appendChild(top);
+    card.appendChild(h('div',{style:'font-family:Syne,sans-serif;font-weight:800;font-size:18px;line-height:1.3;margin-bottom:6px'},a.headline));
+    card.appendChild(h('div',{style:'color:#aaa;font-size:13px;margin-bottom:10px'},a.subheadline));
+    card.appendChild(h('div',{style:'color:#777;font-size:12px;line-height:1.6;border-top:1px solid var(--border);padding-top:10px'},a.body));
+    const footer = h('div',{style:'margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap'});
+    footer.appendChild(h('div',{style:'background:var(--grad);padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;font-family:Syne,sans-serif'},a.cta));
+    footer.appendChild(h('div',{style:'font-size:11px;color:var(--dim)'},(a.hashtags||[]).slice(0,3).map(t=>`#${t}`).join(' ')));
+    card.appendChild(footer);
+    cards.appendChild(card);
+  });
+  el.appendChild(cards);
+
+  // preview
+  const ad = S.generatedAds[S.selectedAd];
+  el.appendChild(h('div',{class:'label',style:'margin-top:20px;margin-bottom:10px'},'Visual Preview'));
+  const preview = h('div',{class:'preview-wrap',style:`background:${GRADIENTS[S.selectedGrad]}`});
+  preview.appendChild(h('div',{class:'preview-overlay'}));
+  if (S.product.price) preview.appendChild(h('div',{class:'preview-price'},S.product.price));
+  const pc = h('div',{class:'preview-content'});
+  pc.appendChild(h('div',{style:'font-size:11px;opacity:.7;margin-bottom:8px;text-transform:uppercase;letter-spacing:2px'},'Digital Product'));
+  pc.appendChild(h('div',{style:'font-family:Syne,sans-serif;font-weight:800;font-size:22px;line-height:1.25;margin-bottom:8px'},ad.headline));
+  pc.appendChild(h('div',{style:'font-size:13px;opacity:.8;margin-bottom:16px'},ad.subheadline));
+  pc.appendChild(h('div',{style:'background:white;color:#111;padding:8px 20px;border-radius:30px;font-size:12px;font-weight:700;display:inline-block;font-family:Syne,sans-serif'},ad.cta));
+  preview.appendChild(pc);
+  el.appendChild(preview);
+
+  const swatches = h('div',{class:'gradient-swatches'});
+  GRADIENTS.forEach((g,i)=>{
+    const s=h('div',{class:`swatch${S.selectedGrad===i?' active':''}`,style:`background:${g}`});
+    s.addEventListener('click',()=>{ S.selectedGrad=i; renderStep1(); });
+    swatches.appendChild(s);
+  });
+  el.appendChild(swatches);
+
+  const nav = h('div',{style:'display:flex;gap:12px;margin-top:20px'});
+  nav.appendChild(h('button',{class:'btn btn-ghost',onClick:()=>setStep(0)},'← Back'));
+  const next = h('button',{class:'btn btn-primary',style:'flex:1;padding:14px',onClick:()=>setStep(2)},'Next: Visuals →');
+  nav.appendChild(next);
+  el.appendChild(nav);
+}
+
+function renderStep2() {
+  const el = document.getElementById('step2');
+  el.innerHTML='';
+  el.className='section fade-in';
+
+  el.appendChild(h('div',{},
+    h('div',{class:'page-title'},'Visual ',h('span',{},'strategy')),
+    h('div',{class:'page-sub'},'AI prompts for Midjourney, DALL-E, or Canva.')
+  ));
+
+  const card = h('div',{class:'card',style:'margin-top:20px'});
+  card.appendChild(h('div',{class:'label'},'Image Direction Hint'));
+  const inp = h('input',{type:'text',placeholder:'Describe the visual style or mood…'});
+  inp.value=S.imagePrompt;
+  inp.addEventListener('input',e=>S.imagePrompt=e.target.value);
+  card.appendChild(inp);
+  const genBtn = h('button',{class:'btn btn-primary btn-full',style:'margin-top:12px'},
+    S._imgLoading?'⚡ Thinking…':'Generate Visual Concepts →'
+  );
+  if (S._imgLoading) genBtn.setAttribute('disabled','');
+  genBtn.addEventListener('click',async()=>{
+    S._imgLoading=true; renderStep2();
+    try { await generateImageIdeas(); } catch(e){ console.error(e); }
+    S._imgLoading=false; renderStep2();
+  });
+  card.appendChild(genBtn);
+  el.appendChild(card);
+
+  if (S.imageIdeas) {
+    S.imageIdeas.forEach((img,i)=>{
+      const c = h('div',{class:'card fade-in'});
+      const top = h('div',{style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px'});
+      top.appendChild(h('div',{style:'font-family:Syne,sans-serif;font-weight:700;font-size:15px'},img.title));
+      const badges = h('div',{style:'display:flex;gap:6px'});
+      badges.appendChild(h('div',{class:'badge badge-orange'},img.style));
+      badges.appendChild(h('div',{class:'badge',style:'background:rgba(255,255,255,.06);color:#aaa'},img.mood));
+      top.appendChild(badges);
+      c.appendChild(top);
+      c.appendChild(h('div',{style:'color:#888;font-size:13px;line-height:1.6;margin-bottom:12px'},img.description));
+      const pbox = h('div',{class:'prompt-box'});
+      pbox.appendChild(h('div',{class:'prompt-label'},'AI Image Prompt'));
+      pbox.appendChild(h('div',{class:'prompt-text'},img.midjourney_prompt));
+      c.appendChild(pbox);
+      const cpBtn = h('button',{class:'btn btn-ghost',style:'width:100%;margin-top:10px;font-size:12px'},
+        S.copied===`img-${i}`?'✓ Copied!':'Copy Prompt'
+      );
+      cpBtn.addEventListener('click',()=>copyText(img.midjourney_prompt,`img-${i}`));
+      c.appendChild(cpBtn);
+      el.appendChild(c);
+    });
+  }
+
+  const nav = h('div',{style:'display:flex;gap:12px;margin-top:20px'});
+  nav.appendChild(h('button',{class:'btn btn-ghost',onClick:()=>setStep(1)},'← Back'));
+  const next = h('button',{class:'btn btn-primary',style:'flex:1;padding:14px',onClick:()=>{
+    S.platformPosts=null; S.postStatus={}; S.postError={};
+    setStep(3);
+    generatePlatformPosts().then(()=>renderStep3()).catch(console.error);
+  }},'Next: Distribute →');
+  nav.appendChild(next);
+  el.appendChild(nav);
+}
+
+function renderStep3() {
+  const el = document.getElementById('step3');
+  el.innerHTML='';
+  el.className='section fade-in';
+
+  el.appendChild(h('div',{},
+    h('div',{class:'page-title'},'Auto-',h('span',{},'Post')),
+    h('div',{class:'page-sub'},'Connect your accounts and post in one click.')
+  ));
+
+  // platform selector
+  el.appendChild(h('div',{class:'label',style:'margin-top:20px;margin-bottom:10px'},'Select Platforms'));
+  const chips = h('div',{class:'chips',style:'margin-bottom:16px'});
+  PLATFORMS.forEach(p=>{
+    const chip = h('div',{class:`chip${S.selectedPlatforms.includes(p.id)?' active':''}`},
+      h('span',{style:`font-weight:700;color:${S.selectedPlatforms.includes(p.id)?p.color:'var(--dim)'}`},p.icon),
+      p.label
+    );
+    chip.addEventListener('click',()=>{
+      if (S.selectedPlatforms.includes(p.id)) S.selectedPlatforms=S.selectedPlatforms.filter(x=>x!==p.id);
+      else S.selectedPlatforms=[...S.selectedPlatforms,p.id];
+      renderStep3();
+    });
+    chips.appendChild(chip);
+  });
+  el.appendChild(chips);
+
+  if (!S.platformPosts) {
+    const loader = h('div',{class:'loading-box'},
+      h('div',{class:'loading-icon pulse'},'⚡'),
+      h('div',{class:'loading-text'},'Writing platform-native posts…')
+    );
+    el.appendChild(loader);
+    return;
+  }
+
+  // post-all banner
+  const apiReady = S.selectedPlatforms.filter(id=>hasCreds(id)&&PLATFORMS.find(p=>p.id===id)?.apiMode!=='clipboard').length;
+  const clipCount = S.selectedPlatforms.filter(id=>PLATFORMS.find(p=>p.id===id)?.apiMode==='clipboard').length;
+  const needKey = S.selectedPlatforms.filter(id=>!hasCreds(id)&&PLATFORMS.find(p=>p.id===id)?.apiMode!=='clipboard').length;
+  const banner = h('div',{class:'post-all'});
+  const banLeft = h('div',{});
+  banLeft.appendChild(h('div',{class:'post-all-title'},'🚀 Post to All Platforms'));
+  banLeft.appendChild(h('div',{class:'post-all-sub'},`${apiReady} API-connected · ${clipCount} clipboard · ${needKey} need keys`));
+  banner.appendChild(banLeft);
+  const allBtn = h('button',{class:'btn-post',onClick:autoPostAll},'Post All Now');
+  banner.appendChild(allBtn);
+  el.appendChild(banner);
+
+  // per-platform
+  PLATFORMS.filter(p=>S.selectedPlatforms.includes(p.id)&&S.platformPosts[p.id]).forEach(p=>{
+    const card = h('div',{class:`platform-card${S.postStatus[p.id]==='ok'?' connected':''}`});
+
+    // header
+    const ph = h('div',{class:'p-header'});
+    const iconWrap = h('div',{class:'p-icon-wrap',style:`background:${p.color}22;color:${p.color}`},p.icon);
+    const pinfo = h('div',{class:'p-info'});
+    pinfo.appendChild(h('div',{class:'p-name'},p.label));
+    const pstat = p.apiMode==='clipboard'?'clipboard + deeplink':hasCreds(p.id)?'✓ connected':'not connected';
+    pinfo.appendChild(h('div',{class:'p-status'},pstat));
+
+    const phRight = h('div',{style:'display:flex;gap:8px;align-items:center'});
+    const st = S.postStatus[p.id];
+    if (st) {
+      const map = {posting:{cls:'badge-yellow',t:'Posting…'},ok:{cls:'badge-green',t:'✓ Posted'},error:{cls:'badge-red',t:'✗ Failed'},clipboard:{cls:'badge-blue',t:'✓ Copied'}};
+      if (map[st]) phRight.appendChild(h('div',{class:`badge ${map[st].cls}`},map[st].t));
+    }
+    if (p.apiMode!=='clipboard') {
+      const kb = h('button',{class:'btn btn-ghost btn-sm'},hasCreds(p.id)?'⚙ Keys':'+ Connect');
+      kb.addEventListener('click',()=>openCredModal(p.id));
+      phRight.appendChild(kb);
+    }
+
+    ph.appendChild(iconWrap);
+    ph.appendChild(pinfo);
+    ph.appendChild(phRight);
+    card.appendChild(ph);
+
+    // post text
+    const pb = h('div',{class:'post-body',style:`border-left-color:${p.color}55`},S.platformPosts[p.id]);
+    card.appendChild(pb);
+
+    // error
+    if (S.postError[p.id]) {
+      const eb = h('div',{class:'err-box'},`✗ ${S.postError[p.id]}`);
+      if (p.id==='twitter') eb.appendChild(h('div',{style:'color:#777;margin-top:4px;font-size:11px'},'💡 Twitter API requires server-side OAuth signing (CORS). Use Copy for now.'));
+      if (p.id==='linkedin') eb.appendChild(h('div',{style:'color:#777;margin-top:4px;font-size:11px'},'💡 LinkedIn blocks browser cross-origin requests. Use a CORS proxy in production.'));
+      card.appendChild(eb);
+    }
+
+    // actions
+    const actions = h('div',{class:'p-actions'});
+    const cpBtn = h('button',{class:'btn btn-ghost',style:'flex:1;font-size:12px'},
+      S.copied===p.id?'✓ Copied!':'Copy'
+    );
+    cpBtn.addEventListener('click',()=>copyText(S.platformPosts[p.id],p.id));
+    actions.appendChild(cpBtn);
+
+    const label = S.postStatus[p.id]==='posting'?'Posting…':
+                  p.apiMode==='clipboard'?`Copy & Open ${p.label}`:
+                  hasCreds(p.id)?`Post to ${p.label}`:'Connect & Post';
+    const postBtn = h('button',{class:'btn-post'},label);
+    if (S.postStatus[p.id]==='posting') postBtn.setAttribute('disabled','');
+    postBtn.addEventListener('click',()=>autoPost(p.id));
+    actions.appendChild(postBtn);
+    card.appendChild(actions);
+    el.appendChild(card);
+  });
+
+  // summary
+  const ad = S.generatedAds?.[S.selectedAd];
+  const sum = h('div',{class:'summary'});
+  sum.appendChild(h('div',{class:'summary-title'},'🎯 Campaign Summary'));
+  [
+    ['Product', S.product.name],
+    ['Headline', ad?.headline],
+    ['Platforms', S.selectedPlatforms.length+' platform'+(S.selectedPlatforms.length>1?'s':'')],
+    S.imageIdeas ? ['Visual Concepts', S.imageIdeas.length+' generated'] : null,
+  ].filter(Boolean).forEach(([k,v])=>{
+    sum.appendChild(h('div',{class:'summary-row'},`✅ ${k}: `,h('span',{},v)));
+  });
+
+  const sumActions = h('div',{class:'summary-actions'});
+  const newBtn = h('button',{class:'btn btn-ghost',style:'font-size:12px'},'+  New Campaign');
+  newBtn.addEventListener('click',()=>{
+    Object.assign(S,{step:0,generatedAds:null,platformPosts:null,imageIdeas:null,
+      postStatus:{},postError:{},product:{name:'',desc:'',price:'',audience:''}});
+    renderAll();
+  });
+  sumActions.appendChild(newBtn);
+  const exportBtn = h('button',{class:'btn btn-primary',style:'font-size:12px'},
+    S.copied==='export'?'✓ Exported!':'Export All'
+  );
+  exportBtn.addEventListener('click',()=>{
+    const txt=`AD STUDIO EXPORT\n\nProduct: ${S.product.name}\nPrice: ${S.product.price}\n\n=== HEADLINE ===\n${ad?.headline}\n\n=== BODY ===\n${ad?.body}\n\n=== CTA ===\n${ad?.cta}\n\n=== POSTS ===\n${S.selectedPlatforms.filter(id=>S.platformPosts?.[id]).map(id=>`\n[${id.toUpperCase()}]\n${S.platformPosts[id]}`).join('\n')}`;
+    copyText(txt,'export');
+  });
+  sumActions.appendChild(exportBtn);
+  sum.appendChild(sumActions);
+  el.appendChild(sum);
+}
+
+// ═══════════════════════════════════════════════════════
+//  MAIN RENDER
+// ═══════════════════════════════════════════════════════
+function renderAll() {
+  renderStepNav();
+  ['step0','step1','step2','step3'].forEach((id,i)=>{
+    document.getElementById(id).style.display = i===S.step?'block':'none';
+  });
+  if (S.step===0) renderStep0();
+  if (S.step===1) renderStep1();
+  if (S.step===2) renderStep2();
+  if (S.step===3) renderStep3();
+}
+
+renderAll();
+</script>
+</body>
+</html>
